@@ -1,10 +1,10 @@
 #!/bin/bash
-cd ../src
+cd src
 
 python_script="main.py"
 
 scratch=True
-cuda='cuda:2'
+cuda='cuda:0'
 dataset='ETT'
 feature_num=7
 seq_len=24
