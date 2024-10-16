@@ -11,6 +11,7 @@ import torch
 from torch.optim import Adam
 from tqdm import tqdm
 import wandb
+import pickle as pk
 
 
 sys.path.append("../dataloader")
@@ -27,7 +28,7 @@ def train(
     args,
     train_loader,
     valid_loader=None,
-    valid_epoch_interval=5,
+    valid_epoch_interval=10,
     foldername="",
     current_time=None,
 ):
@@ -128,6 +129,12 @@ def evaluate(
     current_time=None,
 ):
 
+    skicit_scaler_file_path = os.path.join('datasets/demosath', f'skicit_scaler.pkl')
+    skicit_scaler_file_path = '../'+skicit_scaler_file_path
+  
+    with open(skicit_scaler_file_path, "rb") as fb:
+        skicit_scaler = pk.load(fb)
+
     with torch.no_grad():
         model.eval()
 
@@ -170,9 +177,15 @@ def evaluate(
                 groundtruth.append(X_Tilde.cpu().numpy())
                 eval_mask.append(eval_M.cpu().numpy())
 
+
+
             results["imputed_data"] = np.concatenate(imputed_data, axis=0)
             results["groundtruth"] = np.concatenate(groundtruth, axis=0)
             results["eval_mask"] = np.concatenate(eval_mask, axis=0)
+            
+            results["imputed_data"] = skicit_scaler.inverse_transform(results["imputed_data"])
+            results["groundtruth"] = skicit_scaler.inverse_transform(results["groundtruth"])
+
 
             mae, rmse, mape, mse, r2 = missed_eval_np(
                 results["imputed_data"],
@@ -212,7 +225,7 @@ def evaluate(
                     mae, rmse, mape * 100, mse, r2, CRPS
                 )
             )
-            np.save(save_result_path + "/result_{}.npy".format(current_time), results)
+            np.save(save_result_path + "/result_test_{}.npy".format(current_time), results)
 
 
 def main(args):
@@ -271,6 +284,7 @@ def main(args):
         batch_size=batch_size,
         mode="test",
     )
+
     print("len train dataloader: ", len(train_loader))
     print("len val dataloader: ", len(val_loader))
     print("len test dataloader: ", len(test_loader))

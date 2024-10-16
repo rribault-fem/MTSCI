@@ -13,7 +13,7 @@ missing_ratio=0.2
 val_missing_ratio=0.2
 test_missing_ratio=0.2
 dataset_path="../datasets/$dataset/"
-checkpoint_path="../saved_models/ETT/block/0.2/model.pth"
+checkpoint_path="../saved_models/ETT/block/0.2/model_2024-09-25-22-50-24.pth"
 
 if [ $scratch = True ]; then
     log_path="../logs/scratch"

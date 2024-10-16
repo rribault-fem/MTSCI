@@ -32,14 +32,16 @@ def generate_val_test_dataloader(
 
     X_Tilde = data
     gt_mask = (~np.isnan(X_Tilde)).astype(np.float32)
+    
+
     if missing_pattern == "block":
         # block missing
         indicating_mask = sample_mask(
             shape=data.shape,
-            p=0.0015,
-            p_noise=missing_ratio,
-            max_seq=12,
-            min_seq=12 * 4,
+            p=missing_ratio,
+            p_noise=0.0015,
+            max_seq=seq_len,
+            min_seq=int(seq_len/2),
             rng=rng,
         )
     else:
@@ -92,7 +94,7 @@ def generate_val_test_dataloader(
 
 
 def generate_train_dataloader(
-    dataset_path, seq_len, missing_ratio, missing_pattern, batch_size=4, mode="train"
+    dataset_path, seq_len, missing_ratio, missing_pattern, batch_size=4, mode="train",
 ):
     with open(dataset_path + "/train_set.pkl", "rb") as fb:
         train_data = pk.load(fb)
@@ -108,10 +110,10 @@ def generate_train_dataloader(
         # block missing
         indicating_mask = sample_mask(
             shape=train_data.shape,
-            p=0.0015,
-            p_noise=missing_ratio,
-            max_seq=12,
-            min_seq=12 * 4,
+            p=missing_ratio,
+            p_noise=0.0015,
+            max_seq=seq_len,
+            min_seq=seq_len/2,
             rng=train_rng,
         )
     else:

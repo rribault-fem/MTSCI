@@ -13,15 +13,37 @@
             "cwd": "${workspaceFolder}/src",
             "args": [
                 "--scratch",
-                "--device", "cuda:0",
+                "--device", "cuda:1",
                 "--seed", "1",
                 "--dataset", "demosath",
                 "--dataset_path",  "../datasets/demosath",
-                "--seq_len", "24",
-                "--feature", "7",
+                "--seq_len", "150",
+                "--feature", "20",
+                "--missing_pattern", "block",
+                "--missing_ratio", "0.0035",
+                "--val_missing_ratio", "0.0035",
+                "--test_missing_ratio", "0.0035"
+            ]
+        },
+        {
+            "name": "mooring_tension_eval",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/src",
+            "args": [
+                "--device", "cuda:1",
+                "--seed", "1",
+                "--dataset", "demosath",
+                "--dataset_path",  "../datasets/demosath",
+                "--checkpoint_path", "../saved_models/demosath/block/0.2/model_2024-10-13-01-50-24.pth",
+                "--seq_len", "150",
+                "--feature", "17",
                 "--missing_pattern", "block",
                 "--missing_ratio", "0.2"
             ]
-        }
+        },
+
     ]
 }

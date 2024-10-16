@@ -63,7 +63,7 @@ def sample_mask(
         if max_seq > min_seq:
             fault_len = fault_len + int(randint(max_seq - min_seq))
         idxs_ext = np.concatenate([np.arange(i, i + fault_len) for i in idxs])
-        idxs = np.unique(idxs_ext)
+        idxs = np.unique(idxs_ext).astype(int)
         idxs = np.clip(idxs, 0, shape[0] - 1)
         mask[idxs, col] = True
     mask = mask | (rand(mask.shape) < p_noise)

@@ -9,14 +9,14 @@ python_script="main.py"
 scratch=True
 cuda='cuda:0'
 dataset='demosath'
-feature_num=20
+feature_num=17
 seq_len=150
 missing_pattern='block'
-missing_ratio=0.0033
-val_missing_ratio=0.0033
-test_missing_ratio=0.0033
+missing_ratio=0.4
+val_missing_ratio=0.4
+test_missing_ratio=0.4
 dataset_path="../datasets/$dataset/"
-checkpoint_path="../saved_models/demosath/block/8/model.pth"
+checkpoint_path="../saved_models/demosath/block/0.2/model_2024-10-13-01-50-24.pth"
 
 if [ $scratch = True ]; then
     log_path="../logs/scratch"
@@ -48,9 +48,7 @@ do
             --feature $feature_num \
             --missing_pattern $missing_pattern \
             --missing_ratio $missing_ratio \
-            --val_missing_ratio $val_missing_ratio \
-            --test_missing_ratio $test_missing_ratio \
-            > $log_path/${dataset}_${missing_pattern}_ms${missing_ratio}_seed${seed}.log 2>&1 &
+            > $log_path/${dataset}_${missing_pattern}_ms${missing_ratio}_seed${seed}_len150.log 2>&1 &
     else
         nohup python -u $python_script \
             --device $cuda \
@@ -65,7 +63,7 @@ do
             --test_missing_ratio $test_missing_ratio \
             --checkpoint_path $checkpoint_path \
             --nsample 100 \
-            > $log_path/${dataset}_${missing_pattern}_ms${missing_ratio}_seed${seed}.log 2>&1 &
+            > $log_path/${dataset}_${missing_pattern}_ms${missing_ratio}_seed${seed}_test_tension.log 2>&1 &
     fi
 
     wait
