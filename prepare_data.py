@@ -8,10 +8,6 @@ from typing import List
 import logging
 
 
-
-
-
-
 def get_cos_sin_from_angle(angles:List[str], df:xr.Dataset):
     new_variables = []
     print('###')
@@ -77,6 +73,7 @@ def record_data(step:str='train', start='2024-03-08 00:00:00', end= '2024-05-08 
         skicit_scaler = MinMaxScaler()
         skicit_scaler.fit(data)
 
+        # User defined scaler to avoid gradient skyrocket gradients during training
         with open(skicit_scaler_file_path, 'wb') as f:
             pk.dump(skicit_scaler, f)
 
@@ -87,9 +84,11 @@ def record_data(step:str='train', start='2024-03-08 00:00:00', end= '2024-05-08 
 
     pickle_file_path = os.path.join('datasets/demosath', f'{step}_set.pkl')
     with open(pickle_file_path, 'wb') as f:
+        # Data are scaled before being saved.
         data_scaled = skicit_scaler.transform(data)
         pk.dump(data_scaled, f)
 
+    # Specific Scaling data for MTSCI network
     if step == 'train' :
         scaler = [np.mean(data_scaled, axis=0), np.std(data_scaled, axis=0)]
         pickle_file_path = os.path.join('datasets/demosath', f'scaler.pkl')

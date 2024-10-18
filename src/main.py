@@ -117,8 +117,7 @@ def train(
                     epoch_no + 1, train_loss, train_loss_noise, loss_cl
                 )
             )
-
-
+            
 def evaluate(
     model,
     test_loader,
