@@ -69,6 +69,29 @@ def sample_mask(
     mask = mask | (rand(mask.shape) < p_noise)
     return mask.astype("uint8")
 
+def sample_mask_test_virtual_sensor(shape, columns_to_mask:list=[]) :
+    mask = np.ones(shape=shape)
+    for sensor_col in columns_to_mask :
+        mask[:,sensor_col] = False
+    return mask.astype("uint8")
+
+def sample_mask_test_upsampling(shape:tuple, ratio_mask:int) :
+    """
+    Creates a mask for upsampling tests.
+
+    Parameters:
+    shape (tuple): The shape of the mask to be created.
+    ratio_mask (int): The upscaling frequency ratio. For example, if you want to upscale from 1 Hz to 10 Hz,
+                      you need a ratio_mask of 10, assuming the data matrix is at 10 Hz.
+
+    Returns:
+    numpy.ndarray: A mask array with the specified shape, where every 'ratio_mask' row is set to True.
+                   The mask is returned as an array of type uint8.
+    """
+
+    mask = np.zeros(shape=shape)
+    mask[::ratio_mask,:] = True
+    return mask.astype("uint8")
 
 def get_randmask(observed_mask, min_miss_ratio=0.0, max_miss_ratio=1.0):
     rand_for_mask = torch.rand_like(observed_mask) * observed_mask

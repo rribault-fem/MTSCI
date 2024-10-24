@@ -3,7 +3,7 @@ import pickle as pk
 
 import torch
 from torch.utils.data import DataLoader, TensorDataset
-from utils import sample_mask
+from utils.utils import sample_mask, sample_mask_test_virtual_sensor, sample_mask_test_upsampling
 
 
 def generate_val_test_dataloader(
@@ -14,6 +14,8 @@ def generate_val_test_dataloader(
     batch_size=4,
     mode="val",
     num_workers=0,
+    columns_to_mask:list=None,
+    ratio_mask:int=None
 ):
     if mode == "val":
         with open(dataset_path + "/val_set.pkl", "rb") as fb:
@@ -33,27 +35,36 @@ def generate_val_test_dataloader(
     X_Tilde = data
     gt_mask = (~np.isnan(X_Tilde)).astype(np.float32)
     
-
-    if missing_pattern == "block":
-        # block missing
-        indicating_mask = sample_mask(
-            shape=data.shape,
-            p=missing_ratio,
-            p_noise=0.0015,
-            max_seq=seq_len,
-            min_seq=int(seq_len/2),
-            rng=rng,
-        )
-    else:
-        # point missing
-        indicating_mask = sample_mask(
-            shape=data.shape,
-            p=0.0,
-            p_noise=missing_ratio,
-            max_seq=12,
-            min_seq=12 * 4,
-            rng=rng,
-        )
+    if ratio_mask :
+        indicating_mask = sample_mask_test_upsampling(
+            np.shape(data), ratio_mask=ratio_mask
+            )
+        
+    elif columns_to_mask :
+        indicating_mask = sample_mask_test_virtual_sensor(
+            np.shape(data), columns_to_mask
+            )
+    else :
+        if missing_pattern == "block":
+            # block missing
+            indicating_mask = sample_mask(
+                shape=data.shape,
+                p=missing_ratio,
+                p_noise=0.0015,
+                max_seq=seq_len,
+                min_seq=int(seq_len/2),
+                rng=rng,
+            )
+        else:
+            # point missing
+            indicating_mask = sample_mask(
+                shape=data.shape,
+                p=0.0,
+                p_noise=missing_ratio,
+                max_seq=12,
+                min_seq=12 * 4,
+                rng=rng,
+            )
     X = X_Tilde * (1 - indicating_mask)
 
     mask = gt_mask * (1 - indicating_mask)

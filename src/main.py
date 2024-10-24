@@ -245,6 +245,8 @@ def main(args):
     miss_rate = args.missing_ratio
     val_miss_rate, test_miss_rate = args.val_missing_ratio, args.test_missing_ratio
     missing_pattern = args.missing_pattern
+    ratio_mask = args.ratio_mask
+    columns_to_mask = args.column_to_mask
     batch_size = config["train"]["batch_size"]
 
     saving_path = args.saving_path + "/{}/{}/{}".format(
@@ -282,6 +284,9 @@ def main(args):
         missing_pattern=missing_pattern,
         batch_size=batch_size,
         mode="test",
+        ratio_mask=ratio_mask,
+        columns_to_mask=columns_to_mask
+
     )
 
     print("len train dataloader: ", len(train_loader))
@@ -370,6 +375,16 @@ if __name__ == "__main__":
         default=0.2,
         help="missing ratio on testing set",
     )
+
+    parser.add_argument(
+        "--ratio_mask", type=int, default=None, help="missing ratio for upsampling test"
+    )
+
+    parser.add_argument(
+        "--columns_to_mask", type=list, default=None, help="col(s) nb to mask from test dataset to test virtual sensor(s)"
+    )
+    
+
     parser.add_argument("--scratch", action="store_true", help="test or scratch")
     parser.add_argument("--nsample", type=int, default=100)
     parser.add_argument("--seed", type=int, default=1)
