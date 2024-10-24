@@ -14,8 +14,13 @@ scripts/beijing/
 scripts/slurm/
 *.out
 datasets/METR-LA
+datasets/demosath
 visualization/
 img/
+
+saved_models/demosath
+
+/.vscode
 
 models/model_woall.py
 models/model_wointra.py
