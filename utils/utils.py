@@ -70,9 +70,9 @@ def sample_mask(
     return mask.astype("uint8")
 
 def sample_mask_test_virtual_sensor(shape, columns_to_mask:list=[]) :
-    mask = np.ones(shape=shape)
+    mask = np.zeros(shape=shape)
     for sensor_col in columns_to_mask :
-        mask[:,sensor_col] = False
+        mask[:,sensor_col] = True
     return mask.astype("uint8")
 
 def sample_mask_test_upsampling(shape:tuple, ratio_mask:int) :
@@ -85,12 +85,12 @@ def sample_mask_test_upsampling(shape:tuple, ratio_mask:int) :
                       you need a ratio_mask of 10, assuming the data matrix is at 10 Hz.
 
     Returns:
-    numpy.ndarray: A mask array with the specified shape, where every 'ratio_mask' row is set to True.
+    numpy.ndarray: A mask array with the specified shape, where every 'ratio_mask' row is set to False.
                    The mask is returned as an array of type uint8.
     """
 
-    mask = np.zeros(shape=shape)
-    mask[::ratio_mask,:] = True
+    mask = np.ones(shape=shape)
+    mask[::ratio_mask,:] = False
     return mask.astype("uint8")
 
 def get_randmask(observed_mask, min_miss_ratio=0.0, max_miss_ratio=1.0):

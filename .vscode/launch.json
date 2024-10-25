@@ -41,9 +41,12 @@
                 "--seq_len", "150",
                 "--feature", "20",
                 "--missing_pattern", "block",
-                "--missing_ratio", "0.0035",
-                "--val_missing_ratio", "0.0035",
-                "--test_missing_ratio", "0.0035"
+                //"--ratio_mask", "5",
+                //"--columns_to_mask", "19",
+                "--missing_ratio", "0.0033",
+                "--val_missing_ratio", "0.0033",
+                "--test_missing_ratio", "0.0033",
+                "--nsample","30"
             ]
         },
 

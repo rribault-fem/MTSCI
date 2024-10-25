@@ -63,11 +63,20 @@ def get_pd_index(df):
 def record_data(step:str='train', start='2024-03-08 00:00:00', end= '2024-05-08 23:00:00', date_index_dict = {}) :
     global df
     dslice = df.sel(time=slice(start,end))
+
+    # rolling mean to resample at 1Hz
+    df = df.rolling(time_sensor=5).mean().dropna("time_sensor")
     data = get_numpy_input_2D_set(dslice, channels)
+
+    # from 5Hz to 1Hz
+    data = data[:,::5,:]
+
     date_index_dict[step] = get_pd_index(dslice)
+    date_index_dict[step] = date_index_dict[step][::5]
+
     data = np.vstack(data)
 
-    skicit_scaler_file_path = os.path.join('datasets/demosath', f'skicit_scaler.pkl')
+    skicit_scaler_file_path = os.path.join(output_dir, f'skicit_scaler.pkl')
 
     if step=='train' :
         skicit_scaler = MinMaxScaler()
@@ -82,7 +91,7 @@ def record_data(step:str='train', start='2024-03-08 00:00:00', end= '2024-05-08 
         skicit_scaler = pk.load(fb)
 
 
-    pickle_file_path = os.path.join('datasets/demosath', f'{step}_set.pkl')
+    pickle_file_path = os.path.join(output_dir, f'{step}_set.pkl')
     with open(pickle_file_path, 'wb') as f:
         # Data are scaled before being saved.
         data_scaled = skicit_scaler.transform(data)
@@ -91,7 +100,7 @@ def record_data(step:str='train', start='2024-03-08 00:00:00', end= '2024-05-08 
     # Specific Scaling data for MTSCI network
     if step == 'train' :
         scaler = [np.mean(data_scaled, axis=0), np.std(data_scaled, axis=0)]
-        pickle_file_path = os.path.join('datasets/demosath', f'scaler.pkl')
+        pickle_file_path = os.path.join(output_dir, f'scaler.pkl')
         with open(pickle_file_path, 'wb') as f:
             pk.dump(scaler, f)
 
@@ -115,8 +124,8 @@ def from_sin_cos_to_heading(head_sin: np.array, head_cos: np.array) -> np.array:
 if __name__ == '__main__' :
 
     # User parameters :
-    dataset_path = os.path.join(r"~",r"git_folders/torchydra/2024-07-02_merged_simu_sensors_db_saved.nc")
-    
+    dataset_path = os.path.join(r"~",r"git_folder/torchydra/2024-07-02_merged_simu_sensors_db_saved.nc")
+    output_dir = 'datasets/demosath_2'
 
     # Define chanels for the dataset
     channels = ['simu_AI_WindSpeed', 'simu_V_ST_TrueWindDir', 'simu_V_ST_TrueNacelleDir', 'simu_V_GridRealPowerLog', 'simu_V_MRU_Heave', 'simu_V_MRU_Pitch', 'simu_V_MRU_Roll', 'simu_V_MRU_Longitude_rel', 'simu_V_MRU_Latitude_rel', 'simu_V_RotorRpm', 'simu_V_MRU_Heading', 'simu_V_SPM_LOAD_Pin_1', 'simu_V_SPM_LOAD_Pin_2', 'simu_V_SPM_LOAD_Pin_3', 'simu_V_SPM_LOAD_Pin_4', 'simu_V_SPM_LOAD_Pin_5', 'simu_V_SPM_LOAD_Pin_6'] # 'pitch', 'yaw']
@@ -127,10 +136,10 @@ if __name__ == '__main__' :
 
     # How to split train / val / test sets.
     record_data_input =[
-        {'step': 'train', 'start': '2023-12-01 00:00:00', 'end': '2024-05-08 13:00:00'},
+        {'step': 'train', 'start': '2024-01-01 00:00:00', 'end': '2024-05-08 16:00:00'},
         {'step': 'val', 'start': '2024-05-08 16:00:00', 'end': '2024-05-08 18:00:00'},
         # {'step': 'test', 'start': '2024-05-08 14:00:00', 'end': '2024-05-30 23:00:00'},
-        {'step': 'test', 'start': '2024-05-08 16:00:00', 'end': '2024-05-08 17:00:00'}
+        {'step': 'test', 'start': '2024-05-08 16:00:00', 'end': '2024-05-08 23:00:00'}
     ]
 
     df = xr.open_dataset(dataset_path)
@@ -141,14 +150,24 @@ if __name__ == '__main__' :
     df = df.drop_vars([ var for var in df.variables if var not in not_drop_list] )
     df = df.dropna(dim='time', how='any')
 
+    # Drop Heave higher than 6m
+    df = df.where(df['simu_V_MRU_Heave'].max(dim='time_sensor') <4, drop=True)
+
+    # Drop when the turbine is producing
+    df = df.where(df['simu_V_RotorRpm'].mean(dim='time_sensor') <3, drop=True)
+
+
     df, new_vars = get_cos_sin_from_angle(heading_angle_vars, df)
-    for drop_var in heading_angle_vars:
+
+    drop_filter_vars = ['simu_V_GridRealPowerLog', 'simu_V_RotorRpm']
+
+    for drop_var in heading_angle_vars + drop_filter_vars:
         channels.remove(drop_var)
     for new_var in new_vars:
-        channels.insert(8, new_var)
+        channels.insert(7, new_var) # insert new_vars at the same place as in df
 
     # write the channel list to text file for logging
-    with open(os.path.join('datasets/demosath','channels.txt'), 'w') as f:
+    with open(os.path.join(output_dir,'channels.txt'), 'w') as f:
             f.write(str(channels))
 
     date_index_dict={}
@@ -156,7 +175,7 @@ if __name__ == '__main__' :
         date_index_dict = record_data(input['step'], input['start'], input['end'], date_index_dict )
 
 
-    pickle_file_path = os.path.join('datasets/demosath', f'timestamp.pkl')
+    pickle_file_path = os.path.join(output_dir, f'timestamp.pkl')
     with open(pickle_file_path, 'wb') as f:
         pk.dump(date_index_dict, f)
 

@@ -16,6 +16,7 @@ scripts/slurm/
 *.out
 datasets/METR-LA
 datasets/demosath
+datasets/demosath_2
 visualization/
 img/
 

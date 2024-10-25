@@ -122,17 +122,11 @@ def evaluate(
     model,
     test_loader,
     nsample,
-    scaler,
+    scaler, # path to the pickle file with the skicit-learn scaler
     mean_scaler,
     save_result_path,
     current_time=None,
 ):
-
-    skicit_scaler_file_path = os.path.join('datasets/demosath', f'skicit_scaler.pkl')
-    skicit_scaler_file_path = '../'+skicit_scaler_file_path
-  
-    with open(skicit_scaler_file_path, "rb") as fb:
-        skicit_scaler = pk.load(fb)
 
     with torch.no_grad():
         model.eval()
@@ -169,22 +163,35 @@ def evaluate(
                 all_observed_time.append(observed_time)
                 all_generated_samples.append(samples)
 
-                output = samples_median.values * scaler + mean_scaler
-                X_Tilde = c_target * scaler + mean_scaler
+                # output = samples_median.values * scaler + mean_scaler
+                # X_Tilde = c_target * scaler + mean_scaler
+
+                output = samples_median.values
+                X_Tilde = c_target
+
+
                 eval_M = eval_points
                 imputed_data.append(output.cpu().numpy())
                 groundtruth.append(X_Tilde.cpu().numpy())
                 eval_mask.append(eval_M.cpu().numpy())
 
-
-
             results["imputed_data"] = np.concatenate(imputed_data, axis=0)
             results["groundtruth"] = np.concatenate(groundtruth, axis=0)
             results["eval_mask"] = np.concatenate(eval_mask, axis=0)
-            
+
+            with open(scaler, "rb") as fb:
+                skicit_scaler = pk.load(fb)
+
+            reshape = np.shape(results["imputed_data"] )
+
+            results["imputed_data"]  = np.concatenate(results["imputed_data"], axis=0)
+            results["groundtruth"]  = np.concatenate(results["groundtruth"], axis=0)
+
             results["imputed_data"] = skicit_scaler.inverse_transform(results["imputed_data"])
             results["groundtruth"] = skicit_scaler.inverse_transform(results["groundtruth"])
 
+            results["imputed_data"]  = np.reshape(results["imputed_data"], newshape=reshape)
+            results["groundtruth"]  = np.reshape(results["groundtruth"], newshape=reshape)
 
             mae, rmse, mape, mse, r2 = missed_eval_np(
                 results["imputed_data"],
@@ -216,15 +223,15 @@ def evaluate(
             #     ],
             #     f,
             # )
-            CRPS = calc_quantile_CRPS(
-                all_target, all_generated_samples, all_evalpoint, mean_scaler, scaler
-            )
+            # CRPS = calc_quantile_CRPS(
+            #     all_target, all_generated_samples, all_evalpoint, mean_scaler, scaler
+            # )
             print(
-                "mae = {:.3f}, rmse = {:.3f}, mape = {:.3f}%, mse = {:.3f}, r2 = {:.3f}, CRPS = {:.4f}".format(
-                    mae, rmse, mape * 100, mse, r2, CRPS
+                "mae = {:.3f}, rmse = {:.3f}, mape = {:.3f}%, mse = {:.3f}, r2 = {:.3f}".format(
+                    mae, rmse, mape * 100, mse, r2, #CRPS
                 )
             )
-            np.save(save_result_path + "/result_test_{}.npy".format(current_time), results)
+            np.save(save_result_path + "/result_test_{}.npy".format(str(current_time)), results)
 
 
 def main(args):
@@ -246,7 +253,7 @@ def main(args):
     val_miss_rate, test_miss_rate = args.val_missing_ratio, args.test_missing_ratio
     missing_pattern = args.missing_pattern
     ratio_mask = args.ratio_mask
-    columns_to_mask = args.column_to_mask
+    columns_to_mask = args.columns_to_mask
     batch_size = config["train"]["batch_size"]
 
     saving_path = args.saving_path + "/{}/{}/{}".format(
@@ -276,6 +283,8 @@ def main(args):
         missing_pattern=missing_pattern,
         batch_size=batch_size,
         mode="val",
+        ratio_mask=ratio_mask,
+        columns_to_mask=columns_to_mask
     )
     test_loader = generate_val_test_dataloader(
         dataset_path,
@@ -313,7 +322,7 @@ def main(args):
         )
         print("load model from", saving_path)
         model.load_state_dict(
-            torch.load(saving_path + "/model_{}.pth".format(current_time))
+            torch.load(saving_path + "/model_{}.pth".format(str(current_time)))
         )
     else:
         print("load model from", args.checkpoint_path)
@@ -321,11 +330,13 @@ def main(args):
 
     evaluate(
         model,
+        # val_loader,
         test_loader,
         nsample=args.nsample,
-        scaler=std,
+        scaler=dataset_path + "/skicit_scaler.pkl",
         mean_scaler=mean,
         save_result_path=save_result_path,
+        current_time=current_time,
     )
 
 
@@ -381,7 +392,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--columns_to_mask", type=list, default=None, help="col(s) nb to mask from test dataset to test virtual sensor(s)"
+        "--columns_to_mask", nargs='+', type=int, default=None, help="col(s) nb to mask from test dataset to test virtual sensor(s)"
     )
     
 

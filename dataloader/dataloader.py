@@ -3,7 +3,7 @@ import pickle as pk
 
 import torch
 from torch.utils.data import DataLoader, TensorDataset
-from utils.utils import sample_mask, sample_mask_test_virtual_sensor, sample_mask_test_upsampling
+from utils import sample_mask, sample_mask_test_virtual_sensor, sample_mask_test_upsampling
 
 
 def generate_val_test_dataloader(
@@ -31,6 +31,11 @@ def generate_val_test_dataloader(
         rng = np.random.default_rng(test_SEED)
     else:
         assert False, "mode must be val or test"
+
+    ######
+    # WARNING to be deleted
+    ######
+    # data = data[0:600,:]
 
     X_Tilde = data
     gt_mask = (~np.isnan(X_Tilde)).astype(np.float32)
