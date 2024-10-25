@@ -6,17 +6,18 @@ cd src
 
 python_script="main.py"
 
-scratch=True
+scratch=False
 cuda='cuda:0'
 dataset='demosath'
-feature_num=17
+feature_num=20
 seq_len=150
+columns_to_mask='14 15 16 17 18 19' 
 missing_pattern='block'
-missing_ratio=0.4
-val_missing_ratio=0.4
-test_missing_ratio=0.4
+missing_ratio=0.0033
+val_missing_ratio=0.0033
+test_missing_ratio=0.0033
 dataset_path="../datasets/$dataset/"
-checkpoint_path="../saved_models/demosath/block/0.2/model_2024-10-13-01-50-24.pth"
+checkpoint_path="../saved_models/demosath/block/0.0033/model_2024-10-16-11-31-02.pth"
 
 if [ $scratch = True ]; then
     log_path="../logs/scratch"
@@ -38,18 +39,9 @@ do
     echo "Running iteration $i with seed $seed on device $cuda"
 
     if [ $scratch = True ]; then
-        nohup python -u $python_script \
-            --scratch \
-            --device $cuda \
-            --seed $seed \
-            --dataset $dataset \
-            --dataset_path $dataset_path \
-            --seq_len $seq_len \
-            --feature $feature_num \
-            --missing_pattern $missing_pattern \
-            --missing_ratio $missing_ratio \
-            > $log_path/${dataset}_${missing_pattern}_ms${missing_ratio}_seed${seed}_len150.log 2>&1 &
+        echo "did not run. Change scratch parameter to False."
     else
+        echo "Log path: $log_path/${dataset}_${missing_pattern}_seed${seed}_test_mooring.log"
         nohup python -u $python_script \
             --device $cuda \
             --seed $seed \
@@ -57,13 +49,15 @@ do
             --dataset_path $dataset_path \
             --seq_len $seq_len \
             --feature $feature_num \
+            --checkpoint_path $checkpoint_path \
+            --nsample 100 \
             --missing_pattern $missing_pattern \
             --missing_ratio $missing_ratio \
             --val_missing_ratio $val_missing_ratio \
             --test_missing_ratio $test_missing_ratio \
-            --checkpoint_path $checkpoint_path \
-            --nsample 100 \
-            > $log_path/${dataset}_${missing_pattern}_ms${missing_ratio}_seed${seed}_test_tension.log 2>&1 &
+            # --columns_to_mask $columns_to_mask \
+
+            > $log_path/${dataset}_${missing_pattern}_seed${seed}_test_mooring.log 2>&1 &
     fi
 
     wait

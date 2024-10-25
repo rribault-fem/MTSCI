@@ -12,7 +12,7 @@ dataset='demosath_test'
 feature_num=20
 seq_len=150
 columns_to_mask='[5, 14,15,16,17,18,19]'
-# missing_pattern='block'
+missing_pattern='block'
 # missing_ratio=0.4
 # val_missing_ratio=0.4
 # test_missing_ratio=0.4
@@ -50,15 +50,15 @@ do
             --dataset_path $dataset_path \
             --seq_len $seq_len \
             --feature $feature_num \
-            --ratio_mask $ratio_mask \
+            --columns_to_mask $columns_to_mask \
             --checkpoint_path $checkpoint_path \
             --nsample 100 \
-            # --missing_pattern $missing_pattern \
+            --missing_pattern $missing_pattern \
             # --missing_ratio $missing_ratio \
             # --val_missing_ratio $val_missing_ratio \
             # --test_missing_ratio $test_missing_ratio \
 
-            > $log_path/${dataset}_${missing_pattern}_ms${missing_ratio}_seed${seed}_virt_moor_no_longi.log 2>&1 &
+            > $log_path/${dataset}_${missing_pattern}_seed${seed}_virt_moor_no_longi.log 2>&1 &
     fi
 
     wait
