@@ -6,19 +6,19 @@ cd src
 
 python_script="main.py"
 
-scratch=False
-cuda='cuda:0'
-dataset='demosath_2'
+scratch=True
+cuda='cuda:1'
+dataset='demosath_3'
 feature_num=18
-seq_len=30
-columns_to_mask='13 14 15 16 17' 
+seq_len=48
 missing_pattern='block'
-nsample=30
-missing_ratio=0.0033
-val_missing_ratio=0.0033
-test_missing_ratio=0.0033
+missing_ratio=0.033
+val_missing_ratio=0.033
+test_missing_ratio=0.033
 dataset_path="../datasets/$dataset/"
-checkpoint_path="../saved_models/demosath_2/block/0.03795/model_2024-10-25-16-07-01.pth"
+checkpoint_path="../saved_models/demosath/block/8/model.pth"
+nsample=30
+
 
 if [ $scratch = True ]; then
     log_path="../logs/scratch"
@@ -40,9 +40,21 @@ do
     echo "Running iteration $i with seed $seed on device $cuda"
 
     if [ $scratch = True ]; then
-        echo "did not run. Change scratch parameter to False."
+        nohup python -u $python_script \
+            --scratch \
+            --device $cuda \
+            --seed $seed \
+            --dataset $dataset \
+            --dataset_path $dataset_path \
+            --seq_len $seq_len \
+            --feature $feature_num \
+            --missing_pattern $missing_pattern \
+            --missing_ratio $missing_ratio \
+            --val_missing_ratio $val_missing_ratio \
+            --test_missing_ratio $test_missing_ratio \
+            --nsample $nsample\
+            > $log_path/${dataset}_${missing_pattern}_ms${missing_ratio}_seed${seed}.log 2>&1 &
     else
-        echo "Log path: $log_path/${dataset}_${missing_pattern}_seed${seed}_test_mooring.log"
         nohup python -u $python_script \
             --device $cuda \
             --seed $seed \
@@ -50,15 +62,13 @@ do
             --dataset_path $dataset_path \
             --seq_len $seq_len \
             --feature $feature_num \
-            --checkpoint_path $checkpoint_path \
-            --nsample $nsample \
             --missing_pattern $missing_pattern \
             --missing_ratio $missing_ratio \
             --val_missing_ratio $val_missing_ratio \
             --test_missing_ratio $test_missing_ratio \
-            --columns_to_mask $columns_to_mask \
-
-            > $log_path/${dataset}_${missing_pattern}_seed${seed}_test_mooring.log 2>&1 &
+            --checkpoint_path $checkpoint_path \
+            --nsample $nsample \
+            > $log_path/${dataset}_${missing_pattern}_ms${missing_ratio}_seed${seed}.log 2>&1 &
     fi
 
     wait

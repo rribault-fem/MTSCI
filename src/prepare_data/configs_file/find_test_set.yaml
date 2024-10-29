@@ -1,0 +1,7 @@
+  envir_bin :                                           # Environment variables used to pre-define the validity domain of the model
+    simu_hs: 1
+    simu_tp: 2
+    simu_dp: 20
+    simu_theta10: 20
+    simu_wnd_speed: 2
+    

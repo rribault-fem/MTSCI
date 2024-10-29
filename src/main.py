@@ -117,7 +117,7 @@ def train(
                     epoch_no + 1, train_loss, train_loss_noise, loss_cl
                 )
             )
-            
+
 def evaluate(
     model,
     test_loader,
@@ -199,30 +199,30 @@ def evaluate(
                 1 - results["eval_mask"],
             )
 
-            # with open(
-            #     save_result_path + "/generated_outputs_nsample" + str(nsample) + ".pk",
-            #     "wb",
-            # ) as f:
-            all_target = torch.cat(all_target, dim=0)  # (B,L,K)
-            all_evalpoint = torch.cat(all_evalpoint, dim=0)  # (B,L,K)
-            all_observed_point = torch.cat(all_observed_point, dim=0)  # (B,L,K)
-            all_observed_time = torch.cat(all_observed_time, dim=0)  # (B,L)
-            all_generated_samples = torch.cat(
-                all_generated_samples, dim=0
-            )  # (B,nsample,L,K)
+            with open(
+                save_result_path + "/generated_outputs_nsample" + str(nsample) + ".pk",
+                "wb",
+            ) as f:
+                all_target = torch.cat(all_target, dim=0)  # (B,L,K)
+                all_evalpoint = torch.cat(all_evalpoint, dim=0)  # (B,L,K)
+                all_observed_point = torch.cat(all_observed_point, dim=0)  # (B,L,K)
+                all_observed_time = torch.cat(all_observed_time, dim=0)  # (B,L)
+                all_generated_samples = torch.cat(
+                    all_generated_samples, dim=0
+                )  # (B,nsample,L,K)
 
-            # pickle.dump(
-            #     [
-            #         all_generated_samples,
-            #         all_target,
-            #         all_evalpoint,
-            #         all_observed_point,
-            #         all_observed_time,
-            #         scaler,
-            #         mean_scaler,
-            #     ],
-            #     f,
-            # )
+                pk.dump(
+                    [
+                        all_generated_samples,
+                        all_target,
+                        all_evalpoint,
+                        all_observed_point,
+                        all_observed_time,
+                        scaler,
+                        mean_scaler,
+                    ],
+                    f,
+                )
             # CRPS = calc_quantile_CRPS(
             #     all_target, all_generated_samples, all_evalpoint, mean_scaler, scaler
             # )
@@ -232,6 +232,9 @@ def evaluate(
                 )
             )
             np.save(save_result_path + "/result_test_{}.npy".format(str(current_time)), results)
+
+            return mape*100
+
 
 
 def main(args):
@@ -295,7 +298,6 @@ def main(args):
         mode="test",
         ratio_mask=ratio_mask,
         columns_to_mask=columns_to_mask
-
     )
 
     print("len train dataloader: ", len(train_loader))
@@ -328,7 +330,7 @@ def main(args):
         print("load model from", args.checkpoint_path)
         model.load_state_dict(torch.load(args.checkpoint_path))
 
-    evaluate(
+    mape = evaluate(
         model,
         # val_loader,
         test_loader,
@@ -338,6 +340,8 @@ def main(args):
         save_result_path=save_result_path,
         current_time=current_time,
     )
+
+    return mape
 
 
 if __name__ == "__main__":

@@ -17,6 +17,7 @@ scripts/slurm/
 datasets/METR-LA
 datasets/demosath
 datasets/demosath_2
+datasets/demosath_3
 visualization/
 img/
 

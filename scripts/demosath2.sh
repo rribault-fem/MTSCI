@@ -7,14 +7,14 @@ cd src
 python_script="main.py"
 
 scratch=True
-cuda='cuda:0'
+cuda='cuda:1'
 dataset='demosath_2'
 feature_num=18
 seq_len=30
 missing_pattern='block'
-missing_ratio=0.0165
-val_missing_ratio=0.0165
-test_missing_ratio=0.0165
+missing_ratio=0.05
+val_missing_ratio=0.05
+test_missing_ratio=0.05
 dataset_path="../datasets/$dataset/"
 checkpoint_path="../saved_models/demosath/block/8/model.pth"
 nsample=30
